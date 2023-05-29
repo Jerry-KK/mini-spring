@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+}
+
+group 'cn.mini.spring'
+version '1.0-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+    // 优先使用国内源
+    maven { url 'https://maven.aliyun.com/repository/public' }
+    mavenCentral()
+}
+
+dependencies {
+
+    // https://mvnrepository.com/artifact/dom4j/dom4j
+    implementation 'dom4j:dom4j:1.6.1'
+
+
+}
+
+test {
+    useJUnitPlatform()
+}
