@@ -5,20 +5,22 @@ import com.minis.beans.*;
 import com.minis.core.ClassPathXmlResource;
 import com.minis.core.Resource;
 import com.minis.core.XmlBeanDefinitionReader;
+import com.minis.events.ApplicationEvent;
+import com.minis.events.ApplicationEventPublisher;
 import com.minis.exceptions.BeansException;
 
 /**
  * @author lethe
  * @date 2023/5/29 22:06
  */
-public class ClassPathXmlApplicationContext implements BeanFactory {
+public class ClassPathXmlApplicationContext implements BeanFactory, ApplicationEventPublisher {
 
     BeanFactory beanFactory;
 
     //context负责整合容器的启动过程，读外部配置，解析Bean定义，创建BeanFactory
     public ClassPathXmlApplicationContext(String fileName) {
         Resource resource = new ClassPathXmlResource(fileName);
-        BeanFactory beanFactory = new SimpleBeanFactory();
+        SimpleBeanFactory beanFactory = new SimpleBeanFactory();
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(beanFactory);
         reader.loadBeanDefinitions(resource);
         this.beanFactory = beanFactory;
@@ -31,7 +33,27 @@ public class ClassPathXmlApplicationContext implements BeanFactory {
     }
 
     @Override
-    public void registerBeanDefinition(BeanDefinition beanDefinition) {
-        beanFactory.registerBeanDefinition(beanDefinition);
+    public Boolean containsBean(String name) {
+        return this.beanFactory.containsBean(name);
+    }
+
+    @Override
+    public boolean isSingleton(String name) {
+        return false;
+    }
+
+    @Override
+    public boolean isPrototype(String name) {
+        return false;
+    }
+
+    @Override
+    public Class getType(String name) {
+        return null;
+    }
+
+    @Override
+    public void publishEvent(ApplicationEvent event) {
+
     }
 }
