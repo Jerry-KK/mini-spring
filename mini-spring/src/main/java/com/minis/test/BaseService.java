@@ -12,4 +12,7 @@ public class BaseService {
         this.bbs = bbs;
     }
 
+    public BaseBaseService getBbs() {
+        return bbs;
+    }
 }

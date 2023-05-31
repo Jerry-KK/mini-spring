@@ -8,8 +8,14 @@ public class BaseBaseService {
 
     private AServiceImpl as;
 
+    public BaseBaseService() {
+    }
+
     public void setAs(AServiceImpl as) {
         this.as = as;
     }
 
+    public AServiceImpl getAs() {
+        return as;
+    }
 }

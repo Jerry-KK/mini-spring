@@ -12,6 +12,18 @@ public class AServiceImpl implements AService {
     private String property2;
     private BaseService ref1;
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public void setRef1(BaseService ref1) {
+        this.ref1 = ref1;
+    }
+
     public AServiceImpl() {
     }
 

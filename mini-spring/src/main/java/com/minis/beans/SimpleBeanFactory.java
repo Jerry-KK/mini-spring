@@ -35,16 +35,21 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
     public Object getBean(String beanName) throws BeansException {
         //先尝试直接拿Bean实例
         Object singleton = singletons.get(beanName);
-        //如果此时还没有这个Bean的实例，则获取它的定义来创建实例
+        //如果没有实例，则尝试从毛胚实例中获取
         if(singleton == null) {
-            if(!beanDefinitionMap.containsKey(beanName)) {
-                throw new BeansException();
-            } else {
+            singleton = this.earlySingletonObjects.get(beanName);
+            if (singleton == null) {
+                //如果连毛胚都没有，则创建bean实例并注册
                 //获取Bean的定义
                 BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
                 singleton = createBean(beanDefinition);
                 //注册Bean实例
-                singletons.put(beanDefinition.getId(), singleton);
+                this.registerSingleton(beanName, singleton);
+                //预留beanpostprocessor位置
+                // step 1: postProcessBeforeInitialization
+                // step 2: afterPropertiesSet
+                // step 3: init-method
+                // step 4: postProcessAfterInitialization
             }
         }
         return singleton;
@@ -59,13 +64,6 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
     public void registerBeanDefinition(String name, BeanDefinition beanDefinition) {
         this.beanDefinitionMap.put(name, beanDefinition);
         this.beanDefinitionNames.add(name);
-        if(!beanDefinition.isLazyInit()) {
-            try {
-                getBean(name);
-            } catch (BeansException e) {
-
-            }
-        }
     }
 
     @Override
@@ -103,12 +101,29 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
 
     private Object createBean(BeanDefinition beanDefinition) {
         Class<?> clz = null;
+        //创建毛胚bean实例
+        Object obj = doCreateBean(beanDefinition);
+        //存放到毛胚实例缓存中
+        this.earlySingletonObjects.put(beanDefinition.getId(), obj);
+        try {
+            clz = Class.forName(beanDefinition.getClassName());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        // 处理属性
+        handleProperties(beanDefinition, clz, obj);
+        return obj;
+    }
+
+    //doCreateBean创建毛胚实例，仅仅调用构造方法，没有进行属性处理
+    private Object doCreateBean(BeanDefinition bd) {
+        Class<?> clz = null;
         Object obj = null;
         Constructor<?> con = null;
         try {
-            clz = Class.forName(beanDefinition.getClassName());
-            // 处理构造器参数
-            ArgumentValues argumentValues = beanDefinition.getConstructorArgumentValues();
+            clz = Class.forName(bd.getClassName());
+            // 处理构造器参数 handle constructor
+            ArgumentValues argumentValues = bd.getConstructorArgumentValues();
             if(argumentValues.isEmpty()) {
                 int argumentCount = argumentValues.getArgumentCount();
                 Class<?>[] paramTypes = new Class[argumentCount];
@@ -140,8 +155,7 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
         } catch (Exception e) {
             e.printStackTrace();
         }
-        // 处理属性
-        handleProperties(beanDefinition, clz, obj);
+        System.out.println(bd.getId() + " bean created. " + bd.getClassName() + " : " + obj.toString());
         return obj;
     }
 
@@ -178,7 +192,7 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
                         e.printStackTrace();
                     }
                     try {
-                        paramValues[0] = getBean((String) pValue);
+                        pValue = getBean((String) pValue);
                     } catch (BeansException e) {
                         e.printStackTrace();
                     }
@@ -190,9 +204,21 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
                 try {
                     method = clz.getMethod(methodName, paramTypes);
                     method.invoke(obj, paramValues);
-                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+//                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }
+        }
+    }
+
+    //在 Spring 体系中，Bean 是结合在一起同时创建完毕的。为了减少它内部的复杂性，Spring 对外提供了一个很重要的包装方法：refresh()
+    public void refresh() {
+        for (String beanName : beanDefinitionNames) {
+            try {
+                getBean(beanName);
+            } catch (BeansException e) {
+                e.printStackTrace();
             }
         }
     }
