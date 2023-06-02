@@ -1,6 +1,7 @@
 package com.minis.beans.factory.xml;
 
 import com.minis.beans.factory.config.BeanDefinition;
+import com.minis.beans.factory.support.AbstractBeanFactory;
 import com.minis.beans.factory.support.SimpleBeanFactory;
 import com.minis.beans.factory.config.ConstructorArgumentValues;
 import com.minis.beans.factory.config.PropertyValue;
@@ -16,9 +17,9 @@ import java.util.List;
  */
 public class XmlBeanDefinitionReader {
 
-    SimpleBeanFactory simpleBeanFactory;
-    public XmlBeanDefinitionReader(SimpleBeanFactory simpleBeanFactory) {
-        this.simpleBeanFactory = simpleBeanFactory;
+    AbstractBeanFactory beanFactory;
+    public XmlBeanDefinitionReader(AbstractBeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
     }
     public void loadBeanDefinitions(Resource resource) {
         while (resource.hasNext()) {
@@ -61,7 +62,7 @@ public class XmlBeanDefinitionReader {
             }
             beanDefinition.setConstructorArgumentValues(AVS);
 
-            this.simpleBeanFactory.registerBeanDefinition(beanID, beanDefinition);
+            this.beanFactory.registerBeanDefinition(beanID, beanDefinition);
         }
     }
 }

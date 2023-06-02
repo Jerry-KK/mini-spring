@@ -10,7 +10,8 @@ import com.minis.exceptions.BeansException;
 public class DemoMain {
     public static void main(String[] args) throws BeansException {
         ClassPathXmlApplicationContext classPathXmlApplicationContext = new ClassPathXmlApplicationContext("beans.xml");
-        AServiceImpl aservice = (AServiceImpl)classPathXmlApplicationContext.getBean("aservice");
-        aservice.sayHello();
+        System.out.println("============================");
+        BaseService baseService = (BaseService)classPathXmlApplicationContext.getBean("baseservice");
+        baseService.sayHello();
     }
 }

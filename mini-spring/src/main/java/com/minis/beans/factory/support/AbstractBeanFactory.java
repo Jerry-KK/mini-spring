@@ -1,16 +1,14 @@
 package com.minis.beans.factory.support;
 
-import com.minis.beans.factory.config.BeanDefinition;
 import com.minis.beans.factory.BeanFactory;
+import com.minis.beans.factory.config.*;
 import com.minis.exceptions.BeansException;
-import com.minis.beans.factory.config.ConstructorArgumentValue;
-import com.minis.beans.factory.config.ConstructorArgumentValues;
-import com.minis.beans.factory.config.PropertyValue;
-import com.minis.beans.factory.config.PropertyValues;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,15 +17,27 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author lethe
  * @date 2023/5/29 21:54
  */
-public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements BeanFactory, BeanDefinitionRegistry {
+public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements BeanFactory, BeanDefinitionRegistry {
 
     private Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(256);
     private List<String> beanDefinitionNames = new ArrayList<>();
+
     //存放的就是早期的毛胚实例
-    protected Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(256);
+    protected Map<String, Object> earlySingletonObjects = new HashMap<>(16);
 
-    public SimpleBeanFactory() {
+    public AbstractBeanFactory() {
 
+    }
+
+    //在 Spring 体系中，Bean 是结合在一起同时创建完毕的。为了减少它内部的复杂性，Spring 对外提供了一个很重要的包装方法：refresh()
+    public void refresh() {
+        for (String beanName : beanDefinitionNames) {
+            try {
+                getBean(beanName);
+            } catch (BeansException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     //getBean,容器的核心方法
@@ -40,19 +50,38 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
             singleton = this.earlySingletonObjects.get(beanName);
             if (singleton == null) {
                 //如果连毛胚都没有，则创建bean实例并注册
+                System.out.println("get bean null -------------- " + beanName);
                 //获取Bean的定义
                 BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
                 singleton = createBean(beanDefinition);
                 //注册Bean实例
                 this.registerSingleton(beanName, singleton);
-                //预留beanpostprocessor位置
+                // 进行beanpostprocessor处理
                 // step 1: postProcessBeforeInitialization
-                // step 2: afterPropertiesSet
-                // step 3: init-method
-                // step 4: postProcessAfterInitialization
+                applyBeanPostProcessorBeforeInitialization(singleton, beanName);
+                // step 2: init-method
+                if (beanDefinition.getInitMethodName() != null && !beanDefinition.equals("")) {
+                    invokeInitMethod(beanDefinition, singleton);
+                }
+                // step 3: postProcessAfterInitialization
+                applyBeanPostProcessorAfterInitialization(singleton, beanName);
             }
         }
         return singleton;
+    }
+
+    private void invokeInitMethod(BeanDefinition beanDefinition, Object obj) {
+        Class clz = beanDefinition.getClass();
+        Method method = null; try {
+            method = clz.getMethod(beanDefinition.getInitMethodName());
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        try {
+            method.invoke(obj);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -116,32 +145,32 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
     }
 
     //doCreateBean创建毛胚实例，仅仅调用构造方法，没有进行属性处理
-    private Object doCreateBean(BeanDefinition bd) {
+    private Object doCreateBean(BeanDefinition beanDefinition) {
         Class<?> clz = null;
         Object obj = null;
         Constructor<?> con = null;
         try {
-            clz = Class.forName(bd.getClassName());
+            clz = Class.forName(beanDefinition.getClassName());
             // 处理构造器参数 handle constructor
-            ConstructorArgumentValues argumentValues = bd.getConstructorArgumentValues();
-            if(argumentValues.isEmpty()) {
-                int argumentCount = argumentValues.getArgumentCount();
+            ConstructorArgumentValues constructorArgumentValues = beanDefinition.getConstructorArgumentValues();
+            if(constructorArgumentValues.isEmpty()) {
+                int argumentCount = constructorArgumentValues.getArgumentCount();
                 Class<?>[] paramTypes = new Class[argumentCount];
                 Object[] paramValues = new Object[argumentCount];
                 for (int i = 0; i < argumentCount; i++) {
-                    ConstructorArgumentValue argumentValue = argumentValues.getIndexedArgumentValue(i);
-                    if ("String".equals(argumentValue.getType()) || "java.lang.String".equals(argumentValue.getType())) {
-                        paramTypes[i] = String.class; paramValues[i] = argumentValue.getValue();
-                    } else if ("Integer".equals(argumentValue.getType()) || "java.lang.Integer".equals(argumentValue.getType())) {
+                    ConstructorArgumentValue constructorArgumentValue = constructorArgumentValues.getIndexedArgumentValue(i);
+                    if ("String".equals(constructorArgumentValue.getType()) || "java.lang.String".equals(constructorArgumentValue.getType())) {
+                        paramTypes[i] = String.class; paramValues[i] = constructorArgumentValue.getValue();
+                    } else if ("Integer".equals(constructorArgumentValue.getType()) || "java.lang.Integer".equals(constructorArgumentValue.getType())) {
                         paramTypes[i] = Integer.class;
-                        paramValues[i] = Integer.valueOf((String)argumentValue.getValue());
-                    } else if ("int".equals(argumentValue.getType())) {
+                        paramValues[i] = Integer.valueOf((String)constructorArgumentValue.getValue());
+                    } else if ("int".equals(constructorArgumentValue.getType())) {
                         paramTypes[i] = int.class;
-                        paramValues[i] = Integer.valueOf((String) argumentValue.getValue());
+                        paramValues[i] = Integer.valueOf((String) constructorArgumentValue.getValue());
                     } else {
                         //默认为string
                         paramTypes[i] = String.class;
-                        paramValues[i] = argumentValue.getValue();
+                        paramValues[i] = constructorArgumentValue.getValue();
                     }
                 }
                 //按照特定构造器创建实例
@@ -155,7 +184,7 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(bd.getId() + " bean created. " + bd.getClassName() + " : " + obj.toString());
+        System.out.println(beanDefinition.getId() + " bean created. " + beanDefinition.getClassName() + " : " + obj.toString());
         return obj;
     }
 
@@ -212,15 +241,13 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
         }
     }
 
-    //在 Spring 体系中，Bean 是结合在一起同时创建完毕的。为了减少它内部的复杂性，Spring 对外提供了一个很重要的包装方法：refresh()
-    public void refresh() {
-        for (String beanName : beanDefinitionNames) {
-            try {
-                getBean(beanName);
-            } catch (BeansException e) {
-                e.printStackTrace();
-            }
-        }
+    private void populateBean(BeanDefinition beanDefinition, Class clz, Object obj) {
+        handleProperties(beanDefinition, clz, obj);
     }
+
+
+    abstract public Object applyBeanPostProcessorBeforeInitialization(Object existingBean, String beanName) throws BeansException;
+
+    abstract public Object applyBeanPostProcessorAfterInitialization(Object existingBean, String beanName) throws BeansException;
 
 }

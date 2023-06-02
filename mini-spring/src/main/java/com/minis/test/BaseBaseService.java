@@ -18,4 +18,9 @@ public class BaseBaseService {
     public AServiceImpl getAs() {
         return as;
     }
+
+    public void sayHello() {
+        System.out.println("Base Base Service says Hello");
+        as.sayHello();
+    }
 }
