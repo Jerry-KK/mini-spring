@@ -1,4 +1,4 @@
-package com.minis.core;
+package com.minis.beans.factory.xml;
 
 import java.util.Iterator;
 

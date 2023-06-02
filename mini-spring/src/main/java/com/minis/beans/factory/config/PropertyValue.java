@@ -1,4 +1,4 @@
-package com.minis.inject;
+package com.minis.beans.factory.config;
 
 /**
  * Setter 注入属性类

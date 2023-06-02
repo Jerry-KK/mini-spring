@@ -1,10 +1,10 @@
 package com.minis.context;
 
-import com.minis.beans.BeanDefinition;
-import com.minis.beans.*;
-import com.minis.core.ClassPathXmlResource;
-import com.minis.core.Resource;
-import com.minis.core.XmlBeanDefinitionReader;
+import com.minis.beans.factory.BeanFactory;
+import com.minis.beans.factory.support.SimpleBeanFactory;
+import com.minis.beans.factory.xml.ClassPathXmlResource;
+import com.minis.beans.factory.xml.Resource;
+import com.minis.beans.factory.xml.XmlBeanDefinitionReader;
 import com.minis.events.ApplicationEvent;
 import com.minis.events.ApplicationEventPublisher;
 import com.minis.exceptions.BeansException;

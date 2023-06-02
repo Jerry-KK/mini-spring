@@ -1,11 +1,10 @@
-package com.minis.core;
+package com.minis.beans.factory.xml;
 
-import com.minis.beans.BeanDefinition;
-import com.minis.beans.BeanFactory;
-import com.minis.beans.SimpleBeanFactory;
-import com.minis.inject.ArgumentValues;
-import com.minis.inject.PropertyValue;
-import com.minis.inject.PropertyValues;
+import com.minis.beans.factory.config.BeanDefinition;
+import com.minis.beans.factory.support.SimpleBeanFactory;
+import com.minis.beans.factory.config.ConstructorArgumentValues;
+import com.minis.beans.factory.config.PropertyValue;
+import com.minis.beans.factory.config.PropertyValues;
 import org.dom4j.Element;
 
 import java.util.ArrayList;
@@ -53,7 +52,7 @@ public class XmlBeanDefinitionReader {
             beanDefinition.setDependsOn(refArray);
             //处理构造器参数
             List<Element> constructorArgElements = element.elements("constructor-arg");
-            ArgumentValues AVS = new ArgumentValues();
+            ConstructorArgumentValues AVS = new ConstructorArgumentValues();
             for(Element e:constructorArgElements) {
                 String aType = e.attributeValue("type");
                 String aName = e.attributeValue("name");

@@ -1,17 +1,16 @@
-package com.minis.beans;
+package com.minis.beans.factory.support;
 
+import com.minis.beans.factory.config.BeanDefinition;
+import com.minis.beans.factory.BeanFactory;
 import com.minis.exceptions.BeansException;
-import com.minis.inject.ArgumentValue;
-import com.minis.inject.ArgumentValues;
-import com.minis.inject.PropertyValue;
-import com.minis.inject.PropertyValues;
+import com.minis.beans.factory.config.ConstructorArgumentValue;
+import com.minis.beans.factory.config.ConstructorArgumentValues;
+import com.minis.beans.factory.config.PropertyValue;
+import com.minis.beans.factory.config.PropertyValues;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author lethe
  * @date 2023/5/29 21:54
  */
-public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements BeanFactory,BeanDefinitionRegistry{
+public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements BeanFactory, BeanDefinitionRegistry {
 
     private Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(256);
     private List<String> beanDefinitionNames = new ArrayList<>();
@@ -123,13 +122,13 @@ public class SimpleBeanFactory extends DefaultSingletonBeanRegistry implements B
         try {
             clz = Class.forName(bd.getClassName());
             // 处理构造器参数 handle constructor
-            ArgumentValues argumentValues = bd.getConstructorArgumentValues();
+            ConstructorArgumentValues argumentValues = bd.getConstructorArgumentValues();
             if(argumentValues.isEmpty()) {
                 int argumentCount = argumentValues.getArgumentCount();
                 Class<?>[] paramTypes = new Class[argumentCount];
                 Object[] paramValues = new Object[argumentCount];
                 for (int i = 0; i < argumentCount; i++) {
-                    ArgumentValue argumentValue = argumentValues.getIndexedArgumentValue(i);
+                    ConstructorArgumentValue argumentValue = argumentValues.getIndexedArgumentValue(i);
                     if ("String".equals(argumentValue.getType()) || "java.lang.String".equals(argumentValue.getType())) {
                         paramTypes[i] = String.class; paramValues[i] = argumentValue.getValue();
                     } else if ("Integer".equals(argumentValue.getType()) || "java.lang.Integer".equals(argumentValue.getType())) {

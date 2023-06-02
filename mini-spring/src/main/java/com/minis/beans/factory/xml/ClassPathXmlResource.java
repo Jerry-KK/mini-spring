@@ -1,5 +1,6 @@
-package com.minis.core;
+package com.minis.beans.factory.xml;
 
+import com.minis.beans.factory.xml.Resource;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
