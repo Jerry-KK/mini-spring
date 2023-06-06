@@ -12,7 +12,7 @@ public class BeanDefinition {
     private ConstructorArgumentValues constructorArgumentValues;
     private PropertyValues propertyValues;
     private String initMethodName;
-    private volatile Object beanClass;
+    private volatile Class<?> beanClass;
     private String id;
     private String className;
     private String scope = SCOPE_SINGLETON;
@@ -86,11 +86,11 @@ public class BeanDefinition {
         this.initMethodName = initMethodName;
     }
 
-    public Object getBeanClass() {
+    public Class<?> getBeanClass() {
         return beanClass;
     }
 
-    public void setBeanClass(Object beanClass) {
+    public void setBeanClass(Class<?> beanClass) {
         this.beanClass = beanClass;
     }
 

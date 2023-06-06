@@ -1,5 +1,6 @@
 package com.minis.beans.factory.annotation;
 
+import com.minis.beans.factory.AutowireCapableBeanFactory;
 import com.minis.beans.factory.support.AbstractBeanFactory;
 import com.minis.exceptions.BeansException;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * @author lethe
  * @date 2023/6/2 12:27
  */
-public class AutowireCapableBeanFactory extends AbstractBeanFactory {
+public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
     private final List<AutowiredAnnotationBeanPostProcessor> beanPostProcessors = new ArrayList<>();
 
     public void addBeanPostProcessor(AutowiredAnnotationBeanPostProcessor beanPostProcessor) {

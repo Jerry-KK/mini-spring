@@ -1,6 +1,7 @@
 package com.minis.test;
 
 import com.minis.context.ClassPathXmlApplicationContext;
+import com.minis.context.ClassPathXmlApplicationContextOld;
 import com.minis.exceptions.BeansException;
 
 /**
@@ -9,9 +10,10 @@ import com.minis.exceptions.BeansException;
  */
 public class DemoMain {
     public static void main(String[] args) throws BeansException {
-        ClassPathXmlApplicationContext classPathXmlApplicationContext = new ClassPathXmlApplicationContext("beans.xml");
+//        ClassPathXmlApplicationContextOld classPathXmlApplicationContextOld = new ClassPathXmlApplicationContextOld("beans.xml");
+        ClassPathXmlApplicationContext classPathXmlApplicationContextOld = new ClassPathXmlApplicationContext("beans.xml");
         System.out.println("============================");
-        BaseService baseService = (BaseService)classPathXmlApplicationContext.getBean("baseservice");
+        BaseService baseService = (BaseService) classPathXmlApplicationContextOld.getBean("baseservice");
         baseService.sayHello();
     }
 }
